@@ -284,73 +284,50 @@ public class PlaneBezierCurveCreator extends AbstractPlainCurveCreator {
 }
 \end{verbatim}
 
-\section*{\texttt{TangentBuilder.java}}
+\section*{\texttt{TangentSegmentBuilder.java}}
 \begin{verbatim}
 package com.ran.engine.factories.interpolation.tools;
 
 // Импорт классов
 // ...
 
-public class TangentBuilder {
+public class TangentSegmentBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TangentBuilder.class);
+    private static final TangentSegmentBuilder INSTANCE = new TangentSegmentBuilder();
 
-    private static final TangentBuilder INSTANCE = new TangentBuilder();
-    private static final DoubleMatrix Z_HALF_PI_ROTATION = RotationCreator.getInstance()
-        .createRotation(ThreeDoubleVector.Z_ONE_THREE_DOUBLE_VECTOR, -Math.PI / 2.0);
-
-    public static TangentBuilder getInstance() {
+    public static TangentSegmentBuilder getInstance() {
         return INSTANCE;
     }
 
-    public Result buildTangent(ThreeDoubleVector point,
-                               double tangentAngle,
-                               Double forwardRotationAngle,
-                               Double backRotationAngle) {
-        LOG.trace("point = {}, tangentAngle = {}, forwardRotationAngle = {}, " +
-            "backRotationAngle = {}", point, tangentAngle, forwardRotationAngle,
-            backRotationAngle);
-        ThreeDoubleVector a, b;
-        if (ArithmeticOperations.doubleEquals(point.getX(), 0.0) &&
-                ArithmeticOperations.doubleEquals(point.getY(), 0.0)) {
-            a = ThreeDoubleVector.X_ONE_THREE_DOUBLE_VECTOR;
-            if (point.getZ() > 0.0) {
-                b = ThreeDoubleVector.MINUS_Y_ONE_THREE_DOUBLE_VECTOR;
-            } else {
-                b = ThreeDoubleVector.Y_ONE_THREE_DOUBLE_VECTOR;
-            }
-        } else {
-            a = new ThreeDoubleVector(Z_HALF_PI_ROTATION.multiply(
-                    new ThreeDoubleVector(point.getX(), point.getY(), 0.0)
-                        .getDoubleVector())).normalized();
-            b = point.multiply(a).normalized();
-        }
-        ThreeDoubleVector n = a.multiply(Math.sin(tangentAngle))
-            .add(b.multiply(-Math.cos(tangentAngle)));
-        LOG.trace("a = {}, b = {}, n = {}", a, b, n);
+    public Result buildTangent(TwoDoubleVector point,
+                                              double tangentAngle,
+                                              Double forwardLength,
+                                              Double backLength) {
+        DoubleFunction<TwoDoubleVector> forwardSegment = createTangentSegment(
+                point, tangentAngle, forwardLength);
+        DoubleFunction<TwoDoubleVector> backSegment = createTangentSegment(
+                point, tangentAngle + Math.PI, backLength);
+        return new Result(forwardSegment, backSegment, forwardLength, backLength);
+    }
 
-        DoubleFunction<DoubleMatrix> forwardRotation = null;
-        DoubleFunction<DoubleMatrix> backRotation = null;
-
-        if (forwardRotationAngle != null) {
-            forwardRotation = new DoubleFunction<>(
-                    u -> RotationCreator.getInstance().createRotation(
-                        n, u * forwardRotationAngle),
-                    0.0, 1.0);
+    private DoubleFunction<TwoDoubleVector> createTangentSegment(TwoDoubleVector point,
+                                                                 double tangentAngle,
+                                                                 Double segmentLength) {
+        if (segmentLength == null) {
+            return null;
         }
-        if (backRotationAngle != null) {
-            backRotation = new DoubleFunction<>(
-                    u -> RotationCreator.getInstance().createRotation(n, -u * backRotationAngle),
-                    0.0, 1.0);
-        }
-        return new Result(forwardRotation, backRotation, forwardRotationAngle,
-            backRotationAngle);
+        TwoDoubleVector shiftVector = new TwoDoubleVector(
+                segmentLength * Math.cos(tangentAngle),
+                segmentLength * Math.sin(tangentAngle));
+        TwoDoubleVector farPoint = point.add(shiftVector);
+        return SegmentsBuilder.getInstance().buildSegment(point, farPoint).getSegment();
     }
 
     public static class Result {
-        private final DoubleFunction<DoubleMatrix> forwardRotation;
-        private final DoubleFunction<DoubleMatrix> backRotation;
-        private final Double forwardAngle, backAngle;
+        private DoubleFunction<TwoDoubleVector> forwardSegment;
+        private DoubleFunction<TwoDoubleVector> backSegment;
+        private Double forwardLength;
+        private Double backLength;
 
         // Конструкторы, get- и set-методы
     }
