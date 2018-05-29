@@ -8,7 +8,7 @@
 
 Рассмотрим вначале некоторые три различные точки $p_1, p_2, p_3$ на $\mathbb{R}^2$, и поговорим о том, как построить
 дугу, проходящую последовательно через эти три точки. Дуга будет являться результатом поворота точки $p_1$ вокруг
-некоторой точки $c$ вначале на угол $\phi$ до точки $p_2$, и затем на угол $\psi$ до точки $p_3$.
+некоторой точки $c$ вначале на угол $\varphi$ до точки $p_2$, и затем на угол $\psi$ до точки $p_3$.
 
 Вычислим уравнения серединных перпендикуляров для пары точек $p_1$ и $p_2$, а также для $p_2$ и $p_3$. Затем найдём
 пересечение этих прямых, это и будет точка $c$ "--- центр окружности.
@@ -20,14 +20,14 @@ $$
 \alpha_i=\arctantwo((p_i-c)_y,(p_i-c)_x), \quad i \in \{1,2,3\}.
 $$
 
-Далее определим углы $\phi$ и $\psi$:
+Далее определим углы $\varphi$ и $\psi$:
 
 $$
-\phi=\angle P_1CP_2, \quad \psi=\angle P_2CP_3.
+\varphi=\angle P_1CP_2, \quad \psi=\angle P_2CP_3.
 $$
 
 \begin{equation}
-\phi=
+\varphi=
   \begin{cases}
     \alpha_2-\alpha_1,      & \alpha_2>\alpha_1, \\
     \alpha_2-\alpha_1+2\pi, & \alpha_2<\alpha_1;
@@ -44,10 +44,10 @@ $$
   \label{plane-psi}
 \end{equation}
 
-Теперь если оказалось, что $\phi+\psi>2\pi$, сделаем переприсвоение:
+Теперь если оказалось, что $\varphi+\psi>2\pi$, сделаем переприсвоение:
 
 \begin{equation}
-\phi:=\phi-2\pi, \quad \psi:=\psi-2\pi.
+\varphi:=\varphi-2\pi, \quad \psi:=\psi-2\pi.
 \label{angle-correction}
 \end{equation}
 
@@ -60,13 +60,13 @@ $$
 Теперь требуемая дуга малой окружности может быть описана следующей формулой:
 
 $$
-p(u)=c+(r\cos(\alpha_1+u(\phi+\psi)),r\sin(\alpha_1+u(\phi+\psi))), \quad u \in [0,1].
+p(u)=c+(r\cos(\alpha_1+u(\varphi+\psi)),r\sin(\alpha_1+u(\varphi+\psi))), \quad u \in [0,1].
 $$
 
 Кроме того, дуги от $p_1$ к $p_2$ и от $p_2$ к $p_3$ можно выразить следующим образом:
 
 \begin{equation}
-f_1(u)=c+(r\cos(\alpha_1+u\phi),r\sin(\alpha_1+u\phi)), \quad u \in [0,1];
+f_1(u)=c+(r\cos(\alpha_1+u\varphi),r\sin(\alpha_1+u\varphi)), \quad u \in [0,1];
 \label{arc-phi}
 \end{equation}
 
@@ -107,7 +107,7 @@ $$
 Таким образом, можно показать, что искомая кривая $r(u)$ представима следующим образом:
 
 \begin{equation}
-r(u)=\tilde q(w_l(u)u)+\tilde p((1-w_l(u))u)+p_1, \quad u \in [0,1].
+r(u)=\tilde q(\omega_l(u)u)+\tilde p((1-\omega_l(u))u)+p_1, \quad u \in [0,1].
 \label{plane-deformed-curve}
 \end{equation}
 
@@ -119,7 +119,7 @@ r(u)=\tilde q(w_l(u)u)+\tilde p((1-w_l(u))u)+p_1, \quad u \in [0,1].
 \textit{Шаг} 1.
 
 \begin{enumerate}
-\item Вычислим углы $\phi_1$ и $\psi_1$ между точками $p_1,p_2,p_3$ по формулам (\ref{plane-phi}), (\ref{plane-psi}) и
+\item Вычислим углы $\varphi_1$ и $\psi_1$ между точками $p_1,p_2,p_3$ по формулам (\ref{plane-phi}), (\ref{plane-psi}) и
 (\ref{angle-correction}).
 \item Вычислим дуги $s_1(u)$ и $v_1(u)$ между точками $p_1,p_2,p_3$ по формулам (\ref{arc-phi}) и (\ref{arc-psi}).
 \item Вычислим первый сегмент $r_1(t)$ кривой $r(t)$ по следующей формуле:
@@ -138,13 +138,13 @@ $$
 \textit{Шаг} $i$, где $i \in \{2,3,\dots,k-2\}$.
 
 \begin{enumerate}
-\item Вычислим углы $\phi_i$ и $\psi_i$ между точками $p_i,p_{i+1},p_{i+2}$ по формулам (\ref{plane-phi}),
+\item Вычислим углы $\varphi_i$ и $\psi_i$ между точками $p_i,p_{i+1},p_{i+2}$ по формулам (\ref{plane-phi}),
 (\ref{plane-psi}) и (\ref{angle-correction}).
 \item Вычислим дуги $s_i(u)$ и $v_i(u)$ между точками $p_i,p_{i+1},p_{i+2}$ по формулам (\ref{arc-phi}) и
 (\ref{arc-psi}).
 \item Вычислим $i$-й сегмент $r_i(t)$ кривой $r(t)$ по следующей формуле:
 $$
-r_i(u(t))=s_i(w_l(u(t))u(t))+v_{i-1}((1-w_l(u(t)))u(t))+p_1,
+r_i(u(t))=s_i(\omega_l(u(t))u(t))+v_{i-1}((1-\omega_l(u(t)))u(t))+p_1,
 $$
 \noindent где
 $$
@@ -152,11 +152,11 @@ u(t)=\frac{t-t_i}{t_{i+1}-t_i}, \quad t \in [t_i,t_{i+1}].
 $$
 \end{enumerate}
 
-Здесь $w_l(t)$ "--- сглаживающие полиномы, и $l$ "--- требуемая степень непрерывности кривой $r(t)$. Чтобы обеспечить
+Здесь $\omega_l(t)$ "--- сглаживающие полиномы, и $l$ "--- требуемая степень непрерывности кривой $r(t)$. Чтобы обеспечить
 параметрическую непрерывность кривой $r(t)$ в точках $p_i$, значения $t_i$ следует выбирать следующим образом:
 
 $$
-t_{i+1}=t_i+\frac{t_i-t_{i-1}}{|\phi_{i-1}|}|\psi_{i-1}|, \quad i \in \{2,3,\dots,k-2\}.
+t_{i+1}=t_i+\frac{t_i-t_{i-1}}{|\varphi_{i-1}|}|\psi_{i-1}|, \quad i \in \{2,3,\dots,k-2\}.
 $$
 
 \bigskip
@@ -178,5 +178,5 @@ $$
 следующим образом:
 
 $$
-t_k=t_{k-1}+\frac{t_{k-1}-t_{k-2}}{|\phi_{k-2}|}|\psi_{k-2}|.
+t_k=t_{k-1}+\frac{t_{k-1}-t_{k-2}}{|\varphi_{k-2}|}|\psi_{k-2}|.
 $$
