@@ -7,7 +7,8 @@ package com.ran.engine.factories.interpolation.curvecreators;
 // Импорт классов
 // ...
 
-public abstract class AbstractOrientationCurveCreator extends AbstractInterpolatedCurveCreator<
+public abstract class AbstractOrientationCurveCreator extends
+    AbstractInterpolatedCurveCreator<
         Quaternion, Quaternion, SimpleInputParameters> {
 
     @Override
@@ -31,8 +32,10 @@ public abstract class AbstractOrientationCurveCreator extends AbstractInterpolat
             double endTime = timeMoments.get(i + 1);
             DoubleFunction<Quaternion> currentRotation = rotationsOnSegments.get(i);
             Quaternion currentQuaternion = quaternions.get(i);
-            DoubleFunction<Quaternion> curveSegmentWithoutAligning = new DoubleFunction<>(
-                    point -> currentRotation.apply(point).multiply(currentQuaternion), 0.0, 1.0
+            DoubleFunction<Quaternion> curveSegmentWithoutAligning =
+                new DoubleFunction<>(
+                    point -> currentRotation.apply(point)
+                        .multiply(currentQuaternion), 0.0, 1.0
             );
             DoubleFunction<Quaternion> alignedCurveSegment =
                     curveSegmentWithoutAligning.superposition(timeMomentsUtil
@@ -53,7 +56,8 @@ package com.ran.engine.factories.interpolation.tools;
 
 public class OrientationArcsBuilder {
 
-    private static final OrientationArcsBuilder INSTANCE = new OrientationArcsBuilder();
+    private static final OrientationArcsBuilder INSTANCE =
+        new OrientationArcsBuilder();
 
     public static OrientationArcsBuilder getInstance() {
         return INSTANCE;
@@ -63,7 +67,8 @@ public class OrientationArcsBuilder {
             Quaternion p1, Quaternion p2, Quaternion p3) {
         Quaternion hNotNormalized = p1.quaternionVectorMultiply(p2, p3);
         if (ArithmeticOperations.doubleEquals(hNotNormalized.getNorm(), 0.0)) {
-            OrientationBigArcsBuilder bigArcsBuilder = OrientationBigArcsBuilder.getInstance();
+            OrientationBigArcsBuilder bigArcsBuilder =
+                OrientationBigArcsBuilder.getInstance();
             OrientationBigArcsBuilder.Result firstArc = bigArcsBuilder
                 .buildOrientationBigArcsBetweenQuaternions(p1, p2);
             OrientationBigArcsBuilder.Result secondArc = bigArcsBuilder
@@ -91,7 +96,8 @@ public class OrientationArcsBuilder {
                     arcsBuilderResult.getSecondRotation(), m2, r2);
 
             return new Result(firstRotation, secondRotation,
-                    arcsBuilderResult.getFirstAngle(), arcsBuilderResult.getSecondAngle());
+                    arcsBuilderResult.getFirstAngle(),
+                    arcsBuilderResult.getSecondAngle());
         }
     }
 
@@ -102,7 +108,8 @@ public class OrientationArcsBuilder {
                 point -> {
                     DoubleMatrix rotation = matrixRotation.apply(point);
                     Quaternion leftFactor = Quaternion.createFromVector(
-                            new ThreeDoubleVector(rotation.multiply(m.getDoubleVector())));
+                            new ThreeDoubleVector(rotation.multiply(
+                                m.getDoubleVector())));
                     return leftFactor.multiply(r.getConjugate());
                 },
                 0.0, 1.0
@@ -127,7 +134,8 @@ package com.ran.engine.factories.interpolation.curvecreators;
 // Импорт классов
 // ...
 
-public class OrientationByPointsCurveCreator extends AbstractOrientationCurveCreator {
+public class OrientationByPointsCurveCreator extends
+    AbstractOrientationCurveCreator {
 
     private static final OrientationByPointsCurveCreator INSTANCE =
         new OrientationByPointsCurveCreator();
@@ -137,41 +145,52 @@ public class OrientationByPointsCurveCreator extends AbstractOrientationCurveCre
     }
 
     @Override
-    public DoubleFunction<Quaternion> interpolateCurve(List<Quaternion> quaternions,
-                                                       SimpleInputParameters parameters,
-                                                       int degree) {
+    public DoubleFunction<Quaternion> interpolateCurve(
+            List<Quaternion> quaternions,
+            SimpleInputParameters parameters,
+            int degree) {
         validateVerticesList(quaternions);
 
         double t0 = parameters.getT0();
         double t1 = parameters.getT1();
         int k = quaternions.size();
 
-        CurvesDeformationCreator deformationCreator = CurvesDeformationCreator.getInstance();
-        OrientationArcsBuilder orientationArcsBuilder = OrientationArcsBuilder.getInstance();
+        CurvesDeformationCreator deformationCreator =
+            CurvesDeformationCreator.getInstance();
+        OrientationArcsBuilder orientationArcsBuilder =
+            OrientationArcsBuilder.getInstance();
         TimeMomentsUtil timeMomentsUtil = TimeMomentsUtil.getInstance();
 
-        List<DoubleFunction<Quaternion>> rotationsOnSegments = new ArrayList<>(k - 1);
+        List<DoubleFunction<Quaternion>> rotationsOnSegments =
+            new ArrayList<>(k - 1);
         List<Pair<Double, Double>> rotationAngles = new ArrayList<>(k - 2);
         OrientationArcsBuilder.Result currentOrientationArcsBuildingResult =
-                orientationArcsBuilder.buildArcsBetweenQuaternionsOnThreeDimensionalSphere(
+                orientationArcsBuilder
+                    .buildArcsBetweenQuaternionsOnThreeDimensionalSphere(
                         quaternions.get(0), quaternions.get(1), quaternions.get(2));
-        rotationsOnSegments.add(currentOrientationArcsBuildingResult.getFirstRotation());
+        rotationsOnSegments.add(currentOrientationArcsBuildingResult
+            .getFirstRotation());
         rotationAngles.add(currentOrientationArcsBuildingResult.getAngles());
 
         for (int i = 1; i < k - 2; i++) {
             OrientationArcsBuilder.Result nextOrientationArcsBuildingResult =
-                    orientationArcsBuilder.buildArcsBetweenQuaternionsOnThreeDimensionalSphere(
-                            quaternions.get(i), quaternions.get(i + 1), quaternions.get(i + 2));
-            DoubleFunction<Quaternion> deformedFunction = deformationCreator.deformCurves(
+                    orientationArcsBuilder
+                        .buildArcsBetweenQuaternionsOnThreeDimensionalSphere(
+                            quaternions.get(i), quaternions.get(i + 1),
+                            quaternions.get(i + 2));
+            DoubleFunction<Quaternion> deformedFunction =
+                deformationCreator.deformCurves(
                     currentOrientationArcsBuildingResult.getSecondRotation(),
                     nextOrientationArcsBuildingResult.getFirstRotation(), degree);
             rotationsOnSegments.add(deformedFunction);
             rotationAngles.add(nextOrientationArcsBuildingResult.getAngles());
             currentOrientationArcsBuildingResult = nextOrientationArcsBuildingResult;
         }
-        rotationsOnSegments.add(currentOrientationArcsBuildingResult.getSecondRotation());
+        rotationsOnSegments.add(currentOrientationArcsBuildingResult
+            .getSecondRotation());
 
-        List<Double> timeMoments = timeMomentsUtil.countTimeMoments(rotationAngles, t0, t1, k);
+        List<Double> timeMoments = timeMomentsUtil.countTimeMoments(
+            rotationAngles, t0, t1, k);
         return buildFinalCurve(timeMoments, quaternions, rotationsOnSegments, k - 1);
     }
 }
@@ -186,17 +205,19 @@ package com.ran.engine.factories.interpolation.tools;
 
 public class OrientationBigArcsBuilder {
 
-    private static OrientationBigArcsBuilder INSTANCE = new OrientationBigArcsBuilder();
+    private static OrientationBigArcsBuilder INSTANCE =
+        new OrientationBigArcsBuilder();
 
     public static OrientationBigArcsBuilder getInstance() {
         return INSTANCE;
     }
 
-    public Result buildOrientationBigArcsBetweenQuaternions(Quaternion p1, Quaternion p2) {
+    public Result buildOrientationBigArcsBetweenQuaternions(
+            Quaternion p1, Quaternion p2) {
         Quaternion r = p2.multiply(p1.getConjugate());
         ThreeDoubleVector axis = r.getVector().normalized();
         double cos = r.getScalar();
-        double angle = (Math.acos(cos) * 2.0 + Math.PI) % (2.0 * Math.PI) - Math.PI;
+        double angle = (Math.acos(cos) * 2.0 + Math.PI) \% (2.0 * Math.PI) - Math.PI;
         DoubleFunction<Quaternion> rotation = new DoubleFunction<>(
                 point -> Quaternion.createForRotation(axis, angle * point),
                 0.0, 1.0
@@ -224,15 +245,18 @@ public class OrientationBezierCurveCreator extends AbstractOrientationCurveCreat
 
     @Override
     public DoubleFunction<Quaternion> interpolateCurve(
-            List<Quaternion> quaternions, SimpleInputParameters parameters, int degree) {
+            List<Quaternion> quaternions,
+            SimpleInputParameters parameters, int degree) {
         validateVerticesList(quaternions);
 
         double t0 = parameters.getT0();
         double t1 = parameters.getT1();
         int k = quaternions.size();
 
-        CurvesSmoothingCreator curvesSmoothingCreator = CurvesSmoothingCreator.getInstance();
-        OrientationBigArcsBuilder bigArcsBuilder = OrientationBigArcsBuilder.getInstance();
+        CurvesSmoothingCreator curvesSmoothingCreator =
+            CurvesSmoothingCreator.getInstance();
+        OrientationBigArcsBuilder bigArcsBuilder =
+            OrientationBigArcsBuilder.getInstance();
 
         List<Quaternion> arcsCenters = new ArrayList<>(k - 1);
         for (int i = 0; i < k - 1; i++) {
@@ -243,14 +267,17 @@ public class OrientationBezierCurveCreator extends AbstractOrientationCurveCreat
                 .multiply(quaternions.get(i)));
         }
 
-        List<DoubleFunction<Quaternion>> halfRotationsForward = new ArrayList<>(k - 1);
+        List<DoubleFunction<Quaternion>> halfRotationsForward =
+            new ArrayList<>(k - 1);
         List<DoubleFunction<Quaternion>> halfRotationsBack = new ArrayList<>(k - 1);
         for (int i = 0; i < k - 1; i++) {
-            OrientationBigArcsBuilder.Result firstHalfBigArcsBuilderResult = bigArcsBuilder
+            OrientationBigArcsBuilder.Result firstHalfBigArcsBuilderResult =
+                bigArcsBuilder
                     .buildOrientationBigArcsBetweenQuaternions(quaternions.get(i),
                         arcsCenters.get(i));
             halfRotationsForward.add(firstHalfBigArcsBuilderResult.getRotation());
-            OrientationBigArcsBuilder.Result secondHalfBigArcsBuilderResult = bigArcsBuilder
+            OrientationBigArcsBuilder.Result secondHalfBigArcsBuilderResult =
+                bigArcsBuilder
                     .buildOrientationBigArcsBetweenQuaternions(quaternions.get(i + 1),
                         arcsCenters.get(i));
             halfRotationsBack.add(secondHalfBigArcsBuilderResult.getRotation());
@@ -260,7 +287,8 @@ public class OrientationBezierCurveCreator extends AbstractOrientationCurveCreat
         smoothedRotations.add(halfRotationsForward.get(0));
         for (int i = 1; i < k - 1; i++) {
             smoothedRotations.add(curvesSmoothingCreator.smoothCurves(
-                    halfRotationsBack.get(i - 1), halfRotationsForward.get(i), degree));
+                    halfRotationsBack.get(i - 1),
+                    halfRotationsForward.get(i), degree));
         }
         smoothedRotations.add(new DoubleFunction<>(
                 point -> halfRotationsBack.get(k - 2).apply(1.0 - point),
@@ -286,9 +314,11 @@ package com.ran.engine.factories.interpolation.tools;
 
 public class TangentOrientationBuilder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TangentOrientationBuilder.class);
+    private static final Logger LOG =
+        LoggerFactory.getLogger(TangentOrientationBuilder.class);
 
-    private static TangentOrientationBuilder INSTANCE = new TangentOrientationBuilder();
+    private static TangentOrientationBuilder INSTANCE =
+        new TangentOrientationBuilder();
     private static final DoubleMatrix Z_HALF_PI_ROTATION =
         RotationCreator.getInstance().createRotation(
             ThreeDoubleVector.Z_ONE_THREE_DOUBLE_VECTOR, -Math.PI / 2.0);
@@ -353,14 +383,15 @@ public class TangentOrientationBuilder {
 }
 \end{verbatim}
 
-\section*{\texttt{OrientationByTangentAnglesCurveCreator.java}}
+\section*{\texttt{OrientationByTangentsCurveCreator.java}}
 \begin{verbatim}
 package com.ran.engine.factories.interpolation.curvecreators;
 
 // Импорт классов
 // ...
 
-public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolatedCurveCreator<
+public class OrientationByTangentAnglesCurveCreator extends
+    AbstractInterpolatedCurveCreator<
         Pair<Quaternion, Double>, Quaternion, SimpleInputParameters> {
 
     private static final Logger LOG = LoggerFactory.getLogger(
@@ -377,8 +408,6 @@ public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolated
     public DoubleFunction<Quaternion> interpolateCurve(
             List<Pair<Quaternion, Double>> quaternionsWithTangentAnglesList,
             SimpleInputParameters parameters, int degree) {
-        LOG.trace("quaternionsWithTangentAnglesList = {}, parameters = {}, degree = {}",
-                quaternionsWithTangentAnglesList, parameters, degree);
         validateVerticesList(quaternionsWithTangentAnglesList);
 
         double t0 = parameters.getT0();
@@ -386,16 +415,20 @@ public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolated
         int k = quaternionsWithTangentAnglesList.size();
         LOG.trace("t0 = {}, t1 = {}, k = {}", t0, t1, k);
 
-        CurvesDeformationCreator deformationCreator = CurvesDeformationCreator.getInstance();
+        CurvesDeformationCreator deformationCreator =
+            CurvesDeformationCreator.getInstance();
         OrientationArcsBuilder arcsBuilder = OrientationArcsBuilder.getInstance();
-        OrientationBigArcsBuilder bigArcsBuilder = OrientationBigArcsBuilder.getInstance();
-        TangentOrientationBuilder tangentBuilder = TangentOrientationBuilder.getInstance();
+        OrientationBigArcsBuilder bigArcsBuilder =
+            OrientationBigArcsBuilder.getInstance();
+        TangentOrientationBuilder tangentBuilder =
+            TangentOrientationBuilder.getInstance();
         TimeMomentsUtil timeMomentsUtil = TimeMomentsUtil.getInstance();
 
         LOG.trace("Before calling OrientationArcsBuilder");
         List<OrientationArcsBuilder.Result> smallArcsResults = new ArrayList<>(k - 2);
         for (int i = 1; i < k - 1; i++) {
-            smallArcsResults.add(arcsBuilder.buildArcsBetweenQuaternionsOnThreeDimensionalSphere(
+            smallArcsResults.add(arcsBuilder
+                .buildArcsBetweenQuaternionsOnThreeDimensionalSphere(
                     quaternionsWithTangentAnglesList.get(i - 1).getLeft(),
                     quaternionsWithTangentAnglesList.get(i).getLeft(),
                     quaternionsWithTangentAnglesList.get(i + 1).getLeft()
@@ -404,17 +437,18 @@ public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolated
         LOG.trace("smallArcsResults = {}", smallArcsResults);
 
         LOG.trace("Before calling OrientationBigArcsBuilder");
-        List<OrientationBigArcsBuilder.Result> bigArcsResults = new ArrayList<>(k - 1);
+        List<OrientationBigArcsBuilder.Result> bigArcsResults =
+            new ArrayList<>(k - 1);
         for (int i = 0; i < k - 1; i++) {
-            bigArcsResults.add(bigArcsBuilder.buildOrientationBigArcsBetweenQuaternions(
+            bigArcsResults.add(bigArcsBuilder
+                .buildOrientationBigArcsBetweenQuaternions(
                     quaternionsWithTangentAnglesList.get(i).getLeft(),
                     quaternionsWithTangentAnglesList.get(i + 1).getLeft()
             ));
         }
-        LOG.trace("bigArcsResults = {}", bigArcsResults);
 
-        LOG.trace("Before calling TangentOrientationBuilder");
-        List<TangentOrientationBuilder.Result> tangentBuilderResults = new ArrayList<>(k);
+        List<TangentOrientationBuilder.Result> tangentBuilderResults =
+            new ArrayList<>(k);
         for (int i = 0; i < k; i++) {
             LOG.trace("Point #{} = {}", i, quaternionsWithTangentAnglesList.get(i));
             if (quaternionsWithTangentAnglesList.get(i).getRight() == null) {
@@ -424,22 +458,23 @@ public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolated
                 LOG.trace("Processing angles");
                 Double forwardAngle = null, backAngle = null;
                 if (i + 1 < k) {
-                    if (quaternionsWithTangentAnglesList.get(i + 1).getRight() != null ||
-                            i + 1 == k - 1) {
+                    if (quaternionsWithTangentAnglesList
+                            .get(i + 1).getRight() != null || i + 1 == k - 1) {
                         forwardAngle = Math.abs(bigArcsResults.get(i).getAngle());
                     } else {
-                        forwardAngle = Math.abs(smallArcsResults.get(i).getFirstAngle());
+                        forwardAngle = Math.abs(smallArcsResults
+                            .get(i).getFirstAngle());
                     }
                 }
                 if (i - 1 >= 0) {
-                    if (quaternionsWithTangentAnglesList.get(i - 1).getRight() != null ||
-                            i - 1 == 0) {
+                    if (quaternionsWithTangentAnglesList
+                            .get(i - 1).getRight() != null || i - 1 == 0) {
                         backAngle = Math.abs(bigArcsResults.get(i - 1).getAngle());
                     } else {
-                        backAngle = Math.abs(smallArcsResults.get(i - 2).getSecondAngle());
+                        backAngle = Math.abs(smallArcsResults
+                            .get(i - 2).getSecondAngle());
                     }
                 }
-                LOG.trace("forwardAngle = {}, backAngle = {}", forwardAngle, backAngle);
                 tangentBuilderResults.add(tangentBuilder.buildTangentOrientation(
                         quaternionsWithTangentAnglesList.get(i).getLeft(),
                         quaternionsWithTangentAnglesList.get(i).getRight(),
@@ -468,7 +503,8 @@ public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolated
             if (quaternionsWithTangentAnglesList.get(i).getRight() != null &&
                     quaternionsWithTangentAnglesList.get(i + 1).getRight() != null) {
                 LOG.trace("Angles are set on both points");
-                DoubleFunction<Quaternion> firstDeformedCurve = deformationCreator.deformCurves(
+                DoubleFunction<Quaternion> firstDeformedCurve =
+                    deformationCreator.deformCurves(
                         tangentBuilderResults.get(i).getForwardRotation(),
                         bigArcsResults.get(i).getRotation(), degree);
                 DoubleFunction<Quaternion> secondDeformedCurve = deformationCreator
@@ -488,23 +524,30 @@ public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolated
                             tangentBuilderResults.get(i).getForwardRotation(),
                             smallArcsResults.get(i).getFirstRotation(), degree));
                 }
-            } else if (quaternionsWithTangentAnglesList.get(i + 1).getRight() != null) {
+            } else if (quaternionsWithTangentAnglesList
+                    .get(i + 1).getRight() != null) {
                 LOG.trace("Angle is set only on the second point");
                 if (i == 0) {
-                    rotationsOnSegments.add(deformationCreator.deformCurvesWithCommonEnd(
+                    rotationsOnSegments.add(deformationCreator
+                        .deformCurvesWithCommonEnd(
                             bigArcsResults.get(i).getRotation(),
-                            tangentBuilderResults.get(i + 1).getBackRotation(), degree));
+                            tangentBuilderResults.get(i + 1).getBackRotation(),
+                            degree));
                 } else {
-                    rotationsOnSegments.add(deformationCreator.deformCurvesWithCommonEnd(
+                    rotationsOnSegments.add(deformationCreator
+                        .deformCurvesWithCommonEnd(
                             smallArcsResults.get(i - 1).getSecondRotation(),
-                            tangentBuilderResults.get(i + 1).getBackRotation(), degree));
+                            tangentBuilderResults.get(i + 1).getBackRotation(),
+                            degree));
                 }
             } else {
                 LOG.trace("Angles are not set on both points");
                 if (i == 0) {
-                    rotationsOnSegments.add(smallArcsResults.get(i).getFirstRotation());
+                    rotationsOnSegments.add(smallArcsResults
+                        .get(i).getFirstRotation());
                 } else if (i == k - 2) {
-                    rotationsOnSegments.add(smallArcsResults.get(i - 1).getSecondRotation());
+                    rotationsOnSegments.add(smallArcsResults
+                        .get(i - 1).getSecondRotation());
                 } else {
                     rotationsOnSegments.add(deformationCreator.deformCurves(
                             smallArcsResults.get(i - 1).getSecondRotation(),
@@ -513,7 +556,8 @@ public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolated
             }
         }
 
-        List<Double> timeMoments = timeMomentsUtil.countTimeMoments(rotationAngles, t0, t1, k);
+        List<Double> timeMoments = timeMomentsUtil
+            .countTimeMoments(rotationAngles, t0, t1, k);
         LOG.trace("timeMoments = {}", timeMoments);
 
         LOG.trace("Before building curveSegments");
@@ -523,12 +567,14 @@ public class OrientationByTangentAnglesCurveCreator extends AbstractInterpolated
             double startTime = timeMoments.get(i);
             double endTime = timeMoments.get(i + 1);
             DoubleFunction<Quaternion> currentRotation = rotationsOnSegments.get(i);
-            Quaternion currentOrientation = quaternionsWithTangentAnglesList.get(i).getLeft();
+            Quaternion currentOrientation =
+                quaternionsWithTangentAnglesList.get(i).getLeft();
             LOG.trace("startTime = {}, endTime = {}, currentOrientation = {}",
                 startTime, endTime, currentOrientation);
-            DoubleFunction<Quaternion> curveSegmentWithoutAligning = new DoubleFunction<>(
-                    point -> currentRotation.apply(point).multiply(currentOrientation), 0.0, 1.0
-            );
+            DoubleFunction<Quaternion> curveSegmentWithoutAligning =
+                new DoubleFunction<>(
+                    point -> currentRotation.apply(point)
+                    .multiply(currentOrientation), 0.0, 1.0);
             DoubleFunction<Quaternion> alignedCurveSegment =
                     curveSegmentWithoutAligning.superposition(timeMomentsUtil
                         .buildAligningFunction(startTime, endTime));

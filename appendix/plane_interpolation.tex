@@ -7,8 +7,9 @@ package com.ran.engine.factories.interpolation.curvecreators;
 // Импорт классов
 // ...
 
-public abstract class AbstractPlainCurveCreator extends AbstractInterpolatedCurveCreator<
-        TwoDoubleVector, TwoDoubleVector, SimpleInputParameters> {
+public abstract class AbstractPlainCurveCreator extends
+    AbstractInterpolatedCurveCreator<TwoDoubleVector,
+        TwoDoubleVector, SimpleInputParameters> {
 }
 \end{verbatim}
 
@@ -33,11 +34,11 @@ public class CircleArcsBuilder {
             SegmentsBuilder segmentsBuilder = SegmentsBuilder.getInstance();
             SegmentsBuilder.Result firstSegmentsResult = segmentsBuilder.buildSegment(
                 firstPoint, secondPoint);
-            SegmentsBuilder.Result secondSegmentsResult = segmentsBuilder.buildSegment(
-                secondPoint, thirdPoint);
+            SegmentsBuilder.Result secondSegmentsResult = segmentsBuilder
+                .buildSegment(secondPoint, thirdPoint);
             return new Result(
-                    firstSegmentsResult.getSegment(), secondSegmentsResult.getSegment(),
-                    0.0, 0.0,
+                    firstSegmentsResult.getSegment(), secondSegmentsResult
+                    .getSegment(), 0.0, 0.0,
                     firstSegmentsResult.getLength(), secondSegmentsResult.getLength()
             );
         }
@@ -121,44 +122,52 @@ public class PlaneByPointsCurveCreator extends AbstractPlainCurveCreator {
 
     @Override
     public DoubleFunction<TwoDoubleVector> interpolateCurve(
-            List<TwoDoubleVector> vertices, SimpleInputParameters parameters, int degree) {
+            List<TwoDoubleVector> vertices,
+            SimpleInputParameters parameters, int degree) {
         validateVerticesList(vertices);
 
         double t0 = parameters.getT0();
         double t1 = parameters.getT1();
         int k = vertices.size();
 
-        CurvesDeformationCreator deformationCreator = CurvesDeformationCreator.getInstance();
+        CurvesDeformationCreator deformationCreator = CurvesDeformationCreator
+            .getInstance();
         CircleArcsBuilder circleArcsBuilder = CircleArcsBuilder.getInstance();
         TimeMomentsUtil timeMomentsUtil = TimeMomentsUtil.getInstance();
 
         List<DoubleFunction<TwoDoubleVector>> constantFunctions = new ArrayList<>(k);
         for (int i = 0; i < k; i++) {
-            constantFunctions.add(DoubleFunction.createConstantFunction(vertices.get(i)));
+            constantFunctions.add(DoubleFunction.createConstantFunction(
+                vertices.get(i)));
         }
 
         List<DoubleFunction<TwoDoubleVector>> segments = new ArrayList<>(k - 1);
         List<Pair<Double, Double>> arcsLengths = new ArrayList<>(k - 2);
-        CircleArcsBuilder.Result currentArcsBuildingResult =
-                circleArcsBuilder.buildCircle(vertices.get(0), vertices.get(1), vertices.get(2));
+        CircleArcsBuilder.Result currentArcsBuildingResult = circleArcsBuilder
+            .buildCircle(vertices.get(0), vertices.get(1), vertices.get(2));
         segments.add(currentArcsBuildingResult.getFirstArc());
         arcsLengths.add(currentArcsBuildingResult.getArcsLengths());
 
         for (int i = 1; i < k - 2; i++) {
             CircleArcsBuilder.Result nextArcsBuildingResult =
-                    circleArcsBuilder.buildCircle(vertices.get(i), vertices.get(i + 1),
-                        vertices.get(i + 2));
-            DoubleFunction<TwoDoubleVector> deformedFunction = deformationCreator.deformCurves(
-                    currentArcsBuildingResult.getSecondArc().substract(constantFunctions.get(i)),
-                    nextArcsBuildingResult.getFirstArc().substract(constantFunctions.get(i)),
-                    degree, GroupMultiplicationOperationFactory.getSummationOperation());
+                    circleArcsBuilder.buildCircle(vertices.get(i),
+                        vertices.get(i + 1), vertices.get(i + 2));
+            DoubleFunction<TwoDoubleVector> deformedFunction =
+                deformationCreator.deformCurves(
+                    currentArcsBuildingResult.getSecondArc()
+                        .substract(constantFunctions.get(i)),
+                    nextArcsBuildingResult.getFirstArc()
+                        .substract(constantFunctions.get(i)),
+                    degree, GroupMultiplicationOperationFactory
+                        .getSummationOperation());
             segments.add(deformedFunction.add(constantFunctions.get(i)));
             arcsLengths.add(nextArcsBuildingResult.getArcsLengths());
             currentArcsBuildingResult = nextArcsBuildingResult;
         }
         segments.add(currentArcsBuildingResult.getSecondArc());
 
-        List<Double> timeMoments = timeMomentsUtil.countTimeMoments(arcsLengths, t0, t1, k);
+        List<Double> timeMoments = timeMomentsUtil
+            .countTimeMoments(arcsLengths, t0, t1, k);
         return buildFinalCurve(timeMoments, segments, k - 1);
     }
 }
@@ -179,8 +188,10 @@ public class SegmentsBuilder {
         return INSTANCE;
     }
 
-    public Result buildSegment(TwoDoubleVector firstPoint, TwoDoubleVector secondPoint) {
-        DoubleFunction<TwoDoubleVector> segment = countSegment(firstPoint, secondPoint);
+    public Result buildSegment(TwoDoubleVector firstPoint,
+                               TwoDoubleVector secondPoint) {
+        DoubleFunction<TwoDoubleVector> segment =
+            countSegment(firstPoint, secondPoint);
         double length = countLength(firstPoint, secondPoint);
         return new Result(segment, length);
     }
@@ -189,12 +200,13 @@ public class SegmentsBuilder {
             TwoDoubleVector secondPoint) {
         return new DoubleFunction<>(
                 point -> new TwoDoubleVector(firstPoint.getX() + (secondPoint.getX() -
-                    firstPoint.getX()) * point,
-                    firstPoint.getY() + (secondPoint.getY() - firstPoint.getY()) * point),
+                    firstPoint.getX()) * point, firstPoint.getY() +
+                        (secondPoint.getY() - firstPoint.getY()) * point),
                     0.0, 1.0);
     }
 
-    private double countLength(TwoDoubleVector firstPoint, TwoDoubleVector secondPoint) {
+    private double countLength(TwoDoubleVector firstPoint,
+                               TwoDoubleVector secondPoint) {
         double xDiff = firstPoint.getX() - secondPoint.getX();
         double yDiff = firstPoint.getY() - secondPoint.getY();
         return Math.sqrt(xDiff * xDiff + yDiff * yDiff);
@@ -218,7 +230,8 @@ package com.ran.engine.factories.interpolation.curvecreators;
 
 public class PlaneBezierCurveCreator extends AbstractPlainCurveCreator {
 
-    private static final PlaneBezierCurveCreator INSTANCE = new PlaneBezierCurveCreator();
+    private static final PlaneBezierCurveCreator INSTANCE =
+        new PlaneBezierCurveCreator();
 
     public static PlaneBezierCurveCreator getInstance() {
         return INSTANCE;
@@ -226,19 +239,22 @@ public class PlaneBezierCurveCreator extends AbstractPlainCurveCreator {
 
     @Override
     public DoubleFunction<TwoDoubleVector> interpolateCurve(
-            List<TwoDoubleVector> vertices, SimpleInputParameters parameters, int degree) {
+            List<TwoDoubleVector> vertices,
+            SimpleInputParameters parameters, int degree) {
         validateVerticesList(vertices);
 
         double t0 = parameters.getT0();
         double t1 = parameters.getT1();
         int k = vertices.size();
 
-        CurvesSmoothingCreator curvesSmoothingCreator = CurvesSmoothingCreator.getInstance();
+        CurvesSmoothingCreator curvesSmoothingCreator =
+            CurvesSmoothingCreator.getInstance();
         SegmentsBuilder segmentsBuilder = SegmentsBuilder.getInstance();
 
         List<DoubleFunction<TwoDoubleVector>> constantFunctions = new ArrayList<>(k);
         for (int i = 0; i < k; i++) {
-            constantFunctions.add(DoubleFunction.createConstantFunction(vertices.get(i)));
+            constantFunctions.add(DoubleFunction.createConstantFunction(
+                vertices.get(i)));
         }
 
         List<TwoDoubleVector> segmentsCenters = new ArrayList<>(k - 1);
@@ -251,8 +267,10 @@ public class PlaneBezierCurveCreator extends AbstractPlainCurveCreator {
             ));
         }
 
-        List<DoubleFunction<TwoDoubleVector>> halfSegmentsForward = new ArrayList<>(k - 1);
-        List<DoubleFunction<TwoDoubleVector>> halfSegmentsBack = new ArrayList<>(k - 1);
+        List<DoubleFunction<TwoDoubleVector>> halfSegmentsForward =
+            new ArrayList<>(k - 1);
+        List<DoubleFunction<TwoDoubleVector>> halfSegmentsBack =
+            new ArrayList<>(k - 1);
         for (int i = 0; i < k - 1; i++) {
             SegmentsBuilder.Result firstHalfSegmentsBuilderResult = segmentsBuilder
                     .buildSegment(vertices.get(i), segmentsCenters.get(i));
@@ -268,7 +286,8 @@ public class PlaneBezierCurveCreator extends AbstractPlainCurveCreator {
             smoothedSegments.add(curvesSmoothingCreator.smoothCurves(
                     halfSegmentsBack.get(i - 1).substract(constantFunctions.get(i)),
                     halfSegmentsForward.get(i).substract(constantFunctions.get(i)),
-                    degree, GroupMultiplicationOperationFactory.getSummationOperation())
+                    degree, GroupMultiplicationOperationFactory
+                        .getSummationOperation())
                     .add(constantFunctions.get(i)));
         }
         smoothedSegments.add(new DoubleFunction<>(
@@ -310,9 +329,10 @@ public class TangentSegmentBuilder {
         return new Result(forwardSegment, backSegment, forwardLength, backLength);
     }
 
-    private DoubleFunction<TwoDoubleVector> createTangentSegment(TwoDoubleVector point,
-                                                                 double tangentAngle,
-                                                                 Double segmentLength) {
+    private DoubleFunction<TwoDoubleVector> createTangentSegment(
+            TwoDoubleVector point,
+            double tangentAngle,
+            Double segmentLength) {
         if (segmentLength == null) {
             return null;
         }
@@ -320,7 +340,8 @@ public class TangentSegmentBuilder {
                 segmentLength * Math.cos(tangentAngle),
                 segmentLength * Math.sin(tangentAngle));
         TwoDoubleVector farPoint = point.add(shiftVector);
-        return SegmentsBuilder.getInstance().buildSegment(point, farPoint).getSegment();
+        return SegmentsBuilder.getInstance().buildSegment(point, farPoint)
+            .getSegment();
     }
 
     public static class Result {
@@ -341,7 +362,8 @@ package com.ran.engine.factories.interpolation.curvecreators;
 // Импорт классов
 // ...
 
-public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveCreator<
+public class PlaneByTangentAnglesCurveCreator extends
+    AbstractInterpolatedCurveCreator<
         Pair<TwoDoubleVector, Double>, TwoDoubleVector, SimpleInputParameters> {
 
     private static final PlaneByTangentAnglesCurveCreator INSTANCE =
@@ -361,10 +383,12 @@ public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveC
         double t1 = parameters.getT1();
         int k = verticesWithTangentAnglesList.size();
 
-        CurvesDeformationCreator deformationCreator = CurvesDeformationCreator.getInstance();
+        CurvesDeformationCreator deformationCreator =
+            CurvesDeformationCreator.getInstance();
         CircleArcsBuilder circleArcsBuilder = CircleArcsBuilder.getInstance();
         SegmentsBuilder segmentsBuilder = SegmentsBuilder.getInstance();
-        TangentSegmentBuilder tangentSegmentBuilder = TangentSegmentBuilder.getInstance();
+        TangentSegmentBuilder tangentSegmentBuilder =
+            TangentSegmentBuilder.getInstance();
         TimeMomentsUtil timeMomentsUtil = TimeMomentsUtil.getInstance();
 
         List<DoubleFunction<TwoDoubleVector>> constantFunctions = new ArrayList<>(k);
@@ -390,7 +414,8 @@ public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveC
             ));
         }
 
-        List<TangentSegmentBuilder.Result> tangentSegmentBuilderResults = new ArrayList<>(k);
+        List<TangentSegmentBuilder.Result> tangentSegmentBuilderResults =
+            new ArrayList<>(k);
         for (int i = 0; i < k; i++) {
             if (verticesWithTangentAnglesList.get(i).getRight() == null) {
                 tangentSegmentBuilderResults.add(null);
@@ -409,7 +434,8 @@ public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveC
                             i - 1 == 0) {
                         backLength = directSegmentsResults.get(i - 1).getLength();
                     } else {
-                        backLength = circleArcsResults.get(i - 2).getSecondArcLength();
+                        backLength = circleArcsResults.get(i - 2)
+                            .getSecondArcLength();
                     }
                 }
                 tangentSegmentBuilderResults.add(tangentSegmentBuilder.buildTangent(
@@ -428,19 +454,20 @@ public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveC
             }
         }
 
-        List<DoubleFunction<TwoDoubleVector>> deformedSegments = new ArrayList<>(k - 1);
+        List<DoubleFunction<TwoDoubleVector>> deformedSegments =
+            new ArrayList<>(k - 1);
         for (int i = 0; i < k - 1; i++) {
             if (verticesWithTangentAnglesList.get(i).getRight() != null &&
                     verticesWithTangentAnglesList.get(i + 1).getRight() != null) {
-                DoubleFunction<TwoDoubleVector> firstDeformedCurve = deformationCreator
-                        .deformCurves(
+                DoubleFunction<TwoDoubleVector> firstDeformedCurve =
+                    deformationCreator.deformCurves(
                         tangentSegmentBuilderResults.get(i).getForwardSegment()
                         .substract(constantFunctions.get(i)),
                         directSegmentsResults.get(i).getSegment().substract(
                         constantFunctions.get(i)), degree,
                         GroupMultiplicationOperationFactory.getSummationOperation());
-                DoubleFunction<TwoDoubleVector> secondDeformedCurve = deformationCreator
-                        .deformCurvesWithCommonEnd(
+                DoubleFunction<TwoDoubleVector> secondDeformedCurve =
+                    deformationCreator.deformCurvesWithCommonEnd(
                         directSegmentsResults.get(i).getSegment().substract(
                         constantFunctions.get(i)),
                         tangentSegmentBuilderResults.get(i + 1).getBackSegment()
@@ -457,7 +484,8 @@ public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveC
                             .substract(constantFunctions.get(i)),
                             directSegmentsResults.get(i).getSegment().substract(
                             constantFunctions.get(i)), degree,
-                            GroupMultiplicationOperationFactory.getSummationOperation())
+                            GroupMultiplicationOperationFactory
+                                .getSummationOperation())
                             .add(constantFunctions.get(i)));
                 } else {
                     deformedSegments.add(deformationCreator.deformCurves(
@@ -465,17 +493,20 @@ public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveC
                             .substract(constantFunctions.get(i)),
                             circleArcsResults.get(i).getFirstArc().substract(
                             constantFunctions.get(i)), degree,
-                            GroupMultiplicationOperationFactory.getSummationOperation())
+                            GroupMultiplicationOperationFactory
+                                .getSummationOperation())
                             .add(constantFunctions.get(i)));
                 }
             } else if (verticesWithTangentAnglesList.get(i + 1).getRight() != null) {
                 if (i == 0) {
-                    deformedSegments.add(deformationCreator.deformCurvesWithCommonEnd(
+                    deformedSegments.add(deformationCreator
+                        .deformCurvesWithCommonEnd(
                             directSegmentsResults.get(i).getSegment().substract(
                             constantFunctions.get(i)),
                             tangentSegmentBuilderResults.get(i + 1).getBackSegment()
                             .substract(constantFunctions.get(i + 1)), degree,
-                            GroupMultiplicationOperationFactory.getSummationOperation())
+                            GroupMultiplicationOperationFactory
+                                .getSummationOperation())
                             .add(constantFunctions.get(i)));
                 } else {
                     deformedSegments.add(deformationCreator.deformCurvesWithCommonEnd(
@@ -483,7 +514,8 @@ public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveC
                             constantFunctions.get(i)),
                             tangentSegmentBuilderResults.get(i + 1).getBackSegment()
                             .substract(constantFunctions.get(i + 1)), degree,
-                            GroupMultiplicationOperationFactory.getSummationOperation())
+                            GroupMultiplicationOperationFactory
+                                .getSummationOperation())
                             .add(constantFunctions.get(i)));
                 }
             } else {
@@ -497,13 +529,15 @@ public class PlaneByTangentAnglesCurveCreator extends AbstractInterpolatedCurveC
                             constantFunctions.get(i)),
                             circleArcsResults.get(i).getFirstArc().substract(
                             constantFunctions.get(i)), degree,
-                            GroupMultiplicationOperationFactory.getSummationOperation())
+                            GroupMultiplicationOperationFactory
+                                .getSummationOperation())
                             .add(constantFunctions.get(i)));
                 }
             }
         }
 
-        List<Double> timeMoments = timeMomentsUtil.countTimeMoments(arcsLengths, t0, t1, k);
+        List<Double> timeMoments = timeMomentsUtil
+            .countTimeMoments(arcsLengths, t0, t1, k);
         return buildFinalCurve(timeMoments, deformedSegments, k - 1);
     }
 }
